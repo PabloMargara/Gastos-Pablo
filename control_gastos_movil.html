@@ -266,9 +266,13 @@ function render(){
   variables.forEach(c => { try{ varsContainer.appendChild(catRowHTML(c)); }catch(e){ console.error(e); } });
 
   const sel = document.getElementById('catSelect');
+  const previouslySelected = sel.value; // recordamos qué había elegido antes de refrescar
   sel.innerHTML =
     '<optgroup label="Fijos">' + fijos.map(c=>`<option value="${c.nombre}">${c.nombre}</option>`).join('') + '</optgroup>' +
     '<optgroup label="Variables">' + variables.map(c=>`<option value="${c.nombre}">${c.nombre}</option>`).join('') + '</optgroup>';
+  if(previouslySelected && [...sel.options].some(o => o.value === previouslySelected)){
+    sel.value = previouslySelected; // restauramos la selección si la categoría sigue existiendo
+  }
 
   const list = document.getElementById('itemsList');
   if(!state.movimientos || state.movimientos.length === 0){
