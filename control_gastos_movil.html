@@ -124,6 +124,9 @@
   </div>
 
   <div class="hero">
+    <div style="position:relative; z-index:1; display:flex; justify-content:flex-end; margin-bottom:8px;">
+      <button type="button" class="btn-ghost" id="closeMonthBtn" style="border-color:var(--gold); color:var(--gold);">Cerrar mes y guardar histórico</button>
+    </div>
     <div class="hero-label">Disponible este mes</div>
     <div class="hero-value" id="totalVal">—</div>
     <div class="hero-sub" id="totalLabel">cargando…</div>
@@ -160,6 +163,10 @@
     <button class="btn-ghost" id="refreshBtn">↻ Actualizar</button>
   </div>
   <div id="itemsList"></div>
+
+  <div class="section-title">Histórico mensual</div>
+  <div class="section-sub">Meses ya cerrados, para comparar de un vistazo.</div>
+  <div id="historicoList"></div>
 
   <div class="footer">
     <span id="statusLabel">conectando…</span>
@@ -289,6 +296,28 @@ function render(){
     `).join('') + `</div>`;
   }
 
+  const histContainer = document.getElementById('historicoList');
+  const historico = state.historico || [];
+  if(historico.length === 0){
+    histContainer.innerHTML = '<div class="empty">Todavía no hay meses cerrados. Usa "Cerrar mes y guardar histórico" arriba cuando termine el mes.</div>';
+  } else {
+    histContainer.innerHTML = `<div class="panel" style="padding:8px 18px;">` + historico.map(h => {
+      const tasa = (h.tasaAhorroReal * 100).toFixed(1);
+      const tasaColor = h.tasaAhorroReal >= 0.15 ? 'var(--mint)' : (h.tasaAhorroReal >= 0 ? 'var(--gold)' : 'var(--coral)');
+      return `
+      <div class="item">
+        <div>
+          <div class="item-cat">${new Date(h.mes).toLocaleDateString('es-ES',{month:'long', year:'numeric'})}</div>
+          <div class="item-meta">${h.nomina.toFixed(0)}€ nómina · ${h.gastado.toFixed(0)}€ gastado</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="item-amount">${h.disponible.toFixed(2)}€</div>
+          <div class="item-meta" style="color:${tasaColor};">${tasa}% ahorrado</div>
+        </div>
+      </div>
+    `; }).join('') + `</div>`;
+  }
+
   document.getElementById('statusLabel').textContent = 'sincronizado con tu Sheet';
 }
 
@@ -345,6 +374,25 @@ async function init(){
   document.getElementById('refreshBtn').addEventListener('click', async () => {
     await refresh();
     toast('Actualizado');
+  });
+
+  document.getElementById('closeMonthBtn').addEventListener('click', async () => {
+    const mesLabel = state && state.mes ? state.mes : 'este mes';
+    const confirmado = confirm(`¿Guardar ${mesLabel} en el histórico? Puedes volver a hacerlo si corriges algo después, se sobrescribe.`);
+    if(!confirmado) return;
+    const btn = document.getElementById('closeMonthBtn');
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+    try{
+      await postAction({ action: 'closeMonth' });
+      await refresh();
+      toast('✓ Mes guardado en el histórico');
+    }catch(err){
+      toast('No se pudo cerrar el mes: ' + err.message, true);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Cerrar mes y guardar histórico';
+    }
   });
 
   document.getElementById('saveIncomeBtn').addEventListener('click', async () => {
