@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de gastos</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg:#0A0E16;
+    --bg-glow: radial-gradient(120% 100% at 50% -10%, rgba(200,255,77,0.16), transparent 60%);
+    --surface:#131826;
+    --surface-raised:#1B2233;
+    --stroke:#252D40;
+    --text:#F2F4F0;
+    --text-muted:#8992A6;
+    --text-faint:#5A6478;
+    --lime:#C8FF4D;
+    --violet:#9B8CFF;
+    --amber:#FFB238;
+    --coral:#FF6B57;
+    --sky:#4DD8FF;
+    --pink:#FF6FB0;
+    --mint:#4DFFA6;
+    --gold:#FFD24D;
+    --fijo:#7C88A6;
+    --display:'Space Grotesk', sans-serif;
+    --body:'Inter', -apple-system, sans-serif;
+    --mono:'JetBrains Mono', 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); background-image:var(--bg-glow); color:var(--text); font-family:var(--body); -webkit-font-smoothing:antialiased;}
+  ::selection{background:var(--lime); color:#0A0E16;}
+  .wrap{max-width:640px; margin:0 auto; padding:32px 20px 80px;}
+
+  .header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; gap:12px;}
+  .header h1{font-family:var(--display); font-weight:700; font-size:22px; margin:0;}
+  .header .tag{color:var(--text-muted); font-size:13px; margin-top:4px;}
+
+  .setup{background:var(--surface); border:1px dashed var(--coral); border-radius:16px; padding:20px; margin-bottom:20px; font-size:13.5px; line-height:1.6;}
+  .setup code{background:var(--surface-raised); padding:2px 6px; border-radius:4px; font-family:var(--mono); font-size:12px;}
+
+  .hero{position:relative; background:var(--surface); border:1px solid var(--stroke); border-radius:24px; padding:28px; margin-bottom:20px; overflow:hidden;}
+  .hero::before{content:''; position:absolute; top:-60%; left:-20%; width:140%; height:180%; background:radial-gradient(circle, rgba(200,255,77,0.14), transparent 60%); pointer-events:none;}
+  .hero-label{font-size:13px; color:var(--text-muted); position:relative; z-index:1;}
+  .hero-value{font-family:var(--display); font-weight:700; font-size:48px; line-height:1.05; margin:6px 0 4px; position:relative; z-index:1;
+    background:linear-gradient(180deg,#fff 0%,var(--lime) 140%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
+  .hero-sub{font-family:var(--mono); font-size:12.5px; color:var(--text-muted); position:relative; z-index:1;}
+
+  .section-title{font-family:var(--display); font-weight:600; font-size:16px; margin:24px 0 6px;}
+  .section-sub{font-size:12.5px; color:var(--text-muted); margin-bottom:14px;}
+  .cat{background:var(--surface); border:1px solid var(--stroke); border-radius:16px; padding:16px 18px; margin-bottom:10px;}
+  .cat.is-over{border-color:rgba(255,107,87,0.5); box-shadow:0 0 0 1px rgba(255,107,87,0.15), 0 0 24px rgba(255,107,87,0.08);}
+  .cat-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:10px;}
+  .cat-name{font-size:14px; font-weight:500;}
+  .cat-nums{font-family:var(--mono); font-size:12px; color:var(--text-muted); white-space:nowrap;}
+  .cat-nums .over{color:var(--coral);}
+  .bar-bg{height:6px; background:var(--surface-raised); border-radius:99px; overflow:hidden;}
+  .bar-fill{height:100%; border-radius:99px; transition:width .35s cubic-bezier(.4,0,.2,1);}
+
+  .panel{background:var(--surface); border:1px solid var(--stroke); border-radius:20px; padding:22px; margin:24px 0;}
+  .panel h2{font-family:var(--display); font-size:16px; font-weight:600; margin:0 0 16px;}
+  .person-toggle{display:flex; gap:8px; margin-bottom:14px;}
+  .person-toggle .pill{flex:1; text-align:center; padding:10px; border-radius:12px; border:1px solid var(--stroke); color:var(--text-muted); cursor:pointer; font-size:13.5px; font-weight:500;}
+  .person-toggle .pill.active{background:var(--lime); color:#0A0E16; border-color:var(--lime); font-weight:600;}
+  .field-row{display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap;}
+  .field-row > *{flex:1; min-width:130px;}
+  select, input[type=number], input[type=text]{background:var(--surface-raised); border:1px solid var(--stroke); color:var(--text); padding:12px 14px; border-radius:12px; width:100%; font-size:14px; font-family:var(--body);}
+  select:focus, input:focus{outline:none; border-color:var(--lime);}
+  input::placeholder{color:var(--text-faint);}
+  .btn-primary{width:100%; background:var(--lime); color:#0A0E16; border:none; padding:13px; border-radius:12px; font-weight:600; font-size:14.5px; cursor:pointer;}
+  .btn-primary:disabled{opacity:0.5;}
+  .btn-secondary{background:var(--surface-raised); color:var(--text); border:1px solid var(--stroke); padding:12px 16px; border-radius:12px; font-weight:600; font-size:13.5px; cursor:pointer; white-space:nowrap;}
+  .btn-ghost{background:none; border:1px solid var(--stroke); color:var(--text-muted); font-family:var(--mono); font-size:11.5px; padding:7px 12px; border-radius:10px; cursor:pointer;}
+
+  .move-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .item{display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--stroke);}
+  .item:last-child{border-bottom:none;}
+  .item-cat{font-size:13.5px;}
+  .item-meta{font-family:var(--mono); font-size:11px; color:var(--text-faint); margin-top:2px;}
+  .item-amount{font-family:var(--mono); font-weight:600; font-size:14px;}
+  .empty{color:var(--text-faint); font-size:13px; text-align:center; padding:24px 0;}
+
+  .footer{display:flex; justify-content:space-between; margin-top:24px; padding-top:16px; border-top:1px solid var(--stroke); font-family:var(--mono); font-size:11px; color:var(--text-faint);}
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px); background:var(--surface-raised); border:1px solid var(--stroke); color:var(--text); padding:12px 20px; border-radius:12px; font-size:13.5px; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.error{border-color:var(--coral); color:var(--coral);}
+  .spinner{display:inline-block; width:14px; height:14px; border:2px solid var(--text-faint); border-top-color:var(--lime); border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:6px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <h1>Control de gastos</h1>
+      <div class="tag">Pablo y Dana — conectado a Google Sheets</div>
+    </div>
+  </div>
+
+  <div id="setupNotice" class="setup" style="display:none;">
+    <strong style="color:var(--coral);">Falta conectar la hoja.</strong><br>
+    Abre este archivo con un editor de texto, busca la línea que dice
+    <code>const WEBAPP_URL = "PEGA_AQUI_TU_URL"; // ejemplo real: https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec</code> y sustituye el texto entre comillas
+    por la URL que te dio Google al implementar el Apps Script. Luego guarda y vuelve a abrir esta página.
+  </div>
+
+  <div class="panel">
+    <h2>Nómina de este mes</h2>
+    <div class="field-row">
+      <div style="flex:2;">
+        <label style="display:block; font-size:11.5px; color:var(--text-muted); margin-bottom:6px; font-family:var(--mono);">Importe recibido</label>
+        <input type="number" id="incomeInput" placeholder="3800" step="0.01" min="0">
+      </div>
+      <div style="flex:1;">
+        <label style="display:block; font-size:11.5px; color:var(--text-muted); margin-bottom:6px; font-family:var(--mono);">Ahorro %</label>
+        <input type="number" id="pctInput" placeholder="20" step="1" min="0" max="100">
+      </div>
+      <div style="flex:0 0 auto; align-self:flex-end;">
+        <button type="button" class="btn-secondary" id="saveIncomeBtn">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-label">Disponible este mes</div>
+    <div class="hero-value" id="totalVal">—</div>
+    <div class="hero-sub" id="totalLabel">cargando…</div>
+  </div>
+
+  <div class="section-title">Gastos fijos</div>
+  <div class="section-sub">Alquiler, bizum, súper y recibos domiciliados. Aunque varíen un poco cada mes, no son discrecionales.</div>
+  <div id="catsFijos"></div>
+
+  <div class="section-title">Gastos variables</div>
+  <div class="section-sub">Lo discrecional — aquí es donde de verdad se decide si ahorras o no.</div>
+  <div id="catsVariables"></div>
+
+  <div class="panel">
+    <h2>Registrar gasto</h2>
+    <div class="person-toggle" id="personRow">
+      <div class="pill active" data-person="Pablo">Pablo</div>
+      <div class="pill" data-person="Dana">Dana</div>
+    </div>
+    <form id="addForm">
+      <div class="field-row">
+        <select id="catSelect" required></select>
+        <input type="number" id="amountInput" placeholder="Importe €" step="0.01" min="0" required>
+      </div>
+      <div class="field-row">
+        <input type="text" id="noteInput" placeholder="Nota (opcional)">
+      </div>
+      <button type="submit" class="btn-primary" id="submitBtn">Añadir gasto</button>
+    </form>
+  </div>
+
+  <div class="move-head">
+    <div class="section-title" style="margin:0;">Últimos movimientos</div>
+    <button class="btn-ghost" id="refreshBtn">↻ Actualizar</button>
+  </div>
+  <div id="itemsList"></div>
+
+  <div class="footer">
+    <span id="statusLabel">conectando…</span>
+    <span>datos en tu Google Sheet</span>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ⚠️ PEGA AQUÍ LA URL DE TU APPS SCRIPT DESPUÉS DE IMPLEMENTARLO (ver apps_script_backend.gs)
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbw_Chn_TsnTx9GFn3bBeDZ0aJT8xP1lGVP3LfU4dggPWc4ynyp69aUw4lEF7vs8XJyh/exec";
+// ⚠️ Debe coincidir EXACTAMENTE con el TOKEN del archivo apps_script_backend.gs
+const TOKEN = "NX-BRaBycUtYxmmwfmQ8zZ7f2ZyLMnhe";
+
+const CATEGORY_COLORS = {
+  "Viajes y ocio": "var(--sky)",
+  "Compras online / ropa": "var(--pink)",
+  "Restaurantes y delivery": "var(--amber)",
+  "Salud y cuidado personal": "var(--mint)",
+  "Bizum a amigos": "var(--violet)",
+  "Transporte": "var(--gold)",
+  "Imprevistos": "var(--coral)",
+  "Otros": "var(--text-muted)"
+};
+const FIJOS_NOMBRES = ["Alquiler","Bizum a Dana","Supermercado","Gimnasio","Colegio y niña","Suministros","Seguros","Suscripciones digitales","Comisiones banco"];
+
+let state = null;
+let selectedPerson = 'Pablo';
+
+function toast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), isError ? 3000 : 1800);
+}
+
+async function fetchState(){
+  const bust = 't=' + Date.now();
+  const url = WEBAPP_URL + (WEBAPP_URL.indexOf('?') === -1 ? '?' : '&') + bust + '&token=' + encodeURIComponent(TOKEN);
+  const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if(data.ok === false) throw new Error(data.error || 'No autorizado');
+  return data;
+}
+
+async function postAction(payload){
+  const res = await fetch(WEBAPP_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS con Apps Script
+    body: JSON.stringify({ ...payload, token: TOKEN })
+  });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || 'Error desconocido');
+  return data;
+}
+
+function catRowHTML(c){
+  const overPct = c.limite > 0 ? (c.gastado / c.limite) * 100 : 0;
+  const pct = Math.min(overPct, 100);
+  const color = c.tipo === 'Fijo' ? 'var(--fijo)' : (CATEGORY_COLORS[c.nombre] || 'var(--lime)');
+  const div = document.createElement('div');
+  div.className = 'cat' + (overPct >= 100 ? ' is-over' : '');
+  div.innerHTML = `
+    <div class="cat-top">
+      <span class="cat-name">${c.nombre}</span>
+      <span class="cat-nums">${c.gastado.toFixed(2)}€ <span style="color:var(--text-faint);">/ ${c.limite.toFixed(2)}€</span> ·
+        ${c.disponible>=0 ? 'quedan '+c.disponible.toFixed(2)+'€' : `<span class="over">excedido ${Math.abs(c.disponible).toFixed(2)}€</span>`}
+      </span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" style="width:${pct}%; background:${overPct>=100?'var(--coral)':color};"></div></div>
+  `;
+  return div;
+}
+
+function render(){
+  if(!state) return;
+  document.getElementById('totalVal').textContent = Number(state.disponible).toFixed(2) + '€';
+  document.getElementById('totalLabel').textContent = state.nomina
+    ? `de ${Number(state.nomina).toFixed(2)}€ de nómina · ${Number(state.ahorro).toFixed(2)}€ de ahorro (${(state.pctAhorro*100).toFixed(0)}%) · ${Number(state.gastado).toFixed(2)}€ gastados`
+    : 'introduce tu nómina arriba para calcularlo';
+
+  document.getElementById('incomeInput').placeholder = state.nomina ? Number(state.nomina).toFixed(2) : '3800';
+  if(document.activeElement !== document.getElementById('incomeInput') && state.nomina){
+    document.getElementById('incomeInput').value = Number(state.nomina).toFixed(2);
+  }
+  if(document.activeElement !== document.getElementById('pctInput')){
+    document.getElementById('pctInput').value = state.pctAhorro ? Math.round(state.pctAhorro*100) : 20;
+  }
+
+  const fijosContainer = document.getElementById('catsFijos');
+  const varsContainer = document.getElementById('catsVariables');
+  fijosContainer.innerHTML = '';
+  varsContainer.innerHTML = '';
+  const cats = state.categorias || [];
+  const fijos = cats.filter(c => c.tipo === 'Fijo');
+  const variables = cats.filter(c => c.tipo === 'Variable');
+
+  if(fijos.length === 0) fijosContainer.innerHTML = '<div class="empty">Sin categorías fijas encontradas.</div>';
+  fijos.forEach(c => { try{ fijosContainer.appendChild(catRowHTML(c)); }catch(e){ console.error(e); } });
+
+  if(variables.length === 0) varsContainer.innerHTML = '<div class="empty">Sin categorías variables encontradas.</div>';
+  variables.forEach(c => { try{ varsContainer.appendChild(catRowHTML(c)); }catch(e){ console.error(e); } });
+
+  const sel = document.getElementById('catSelect');
+  sel.innerHTML =
+    '<optgroup label="Fijos">' + fijos.map(c=>`<option value="${c.nombre}">${c.nombre}</option>`).join('') + '</optgroup>' +
+    '<optgroup label="Variables">' + variables.map(c=>`<option value="${c.nombre}">${c.nombre}</option>`).join('') + '</optgroup>';
+
+  const list = document.getElementById('itemsList');
+  if(!state.movimientos || state.movimientos.length === 0){
+    list.innerHTML = '<div class="empty">Sin movimientos este mes.</div>';
+  } else {
+    list.innerHTML = `<div class="panel" style="padding:8px 18px;">` + state.movimientos.slice(0,15).map(m => `
+      <div class="item">
+        <div>
+          <div class="item-cat">${m.categoria}${m.nota ? ' — '+m.nota : ''}</div>
+          <div class="item-meta">${m.persona} · ${new Date(m.fecha).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})}</div>
+        </div>
+        <span class="item-amount">${Number(m.importe).toFixed(2)}€</span>
+      </div>
+    `).join('') + `</div>`;
+  }
+
+  document.getElementById('statusLabel').textContent = 'sincronizado con tu Sheet';
+}
+
+async function refresh(){
+  try{
+    state = await fetchState();
+    render();
+  }catch(err){
+    document.getElementById('statusLabel').textContent = 'error de conexión';
+    toast('No se pudo conectar con la hoja: ' + err.message, true);
+  }
+}
+
+async function init(){
+  if(!WEBAPP_URL || WEBAPP_URL.indexOf('PEGA_AQUI') !== -1){
+    document.getElementById('setupNotice').style.display = 'block';
+    document.getElementById('statusLabel').textContent = 'no configurado';
+    return;
+  }
+  await refresh();
+
+  document.querySelectorAll('.person-toggle .pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.person-toggle .pill').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedPerson = btn.dataset.person;
+    });
+  });
+
+  document.getElementById('addForm').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const category = document.getElementById('catSelect').value;
+    const amount = parseFloat(document.getElementById('amountInput').value);
+    const note = document.getElementById('noteInput').value.trim();
+    if(!amount || amount <= 0) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Guardando…';
+    try{
+      await postAction({ action: 'addExpense', category, amount, note, person: selectedPerson });
+      await refresh();
+      document.getElementById('amountInput').value = '';
+      document.getElementById('noteInput').value = '';
+      toast(`✓ ${amount.toFixed(2)}€ guardados en ${category}`);
+    }catch(err){
+      toast('No se pudo guardar: ' + err.message, true);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Añadir gasto';
+    }
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', async () => {
+    await refresh();
+    toast('Actualizado');
+  });
+
+  document.getElementById('saveIncomeBtn').addEventListener('click', async () => {
+    const nomina = parseFloat(document.getElementById('incomeInput').value);
+    let pctAhorro = parseFloat(document.getElementById('pctInput').value);
+    if(isNaN(pctAhorro)) pctAhorro = 20;
+    const btn = document.getElementById('saveIncomeBtn');
+    btn.disabled = true;
+    btn.textContent = 'Guardando…';
+    try{
+      await postAction({ action: 'setIncome', nomina: isNaN(nomina) ? undefined : nomina, pctAhorro: pctAhorro / 100 });
+      await refresh();
+      toast('✓ Nómina guardada');
+    }catch(err){
+      toast('No se pudo guardar: ' + err.message, true);
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+    }
+  });
+
+  setInterval(() => { if(document.visibilityState === 'visible') refresh(); }, 20000);
+}
+
+init();
+</script>
+</body>
+</html>
